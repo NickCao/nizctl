@@ -10,4 +10,6 @@ lto = true
 strip = true
 
 [dependencies]
+anyhow = "1.0.42"
 hidapi = "1.2.6"
+packed_struct = { version = "0.6", features = [ "byte_types_64" ] }
