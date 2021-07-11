@@ -1,4 +1,4 @@
-use crate::consts::{self, COMMAND};
+use crate::consts::{self, OpCode};
 use anyhow::Result;
 use hidapi::{HidApi, HidDevice};
 use packed_struct::prelude::*;
@@ -33,7 +33,7 @@ impl Keyboard {
     }
 
     pub fn print_version(&self) -> Result<()> {
-        self.write_msg(Message::command(COMMAND::VERSION))?;
+        self.write_msg(Message::command(OpCode::VersionRead))?;
         let msg: Version = self.read_msg()?;
         println!(
             "{}",
@@ -45,7 +45,7 @@ impl Keyboard {
     }
 
     pub fn print_counter(&self) -> Result<()> {
-        self.write_msg(Message::command(COMMAND::READ_COUNTER))?;
+        self.write_msg(Message::command(OpCode::CounterRead))?;
         let mut counter: Vec<u32> = vec![];
         loop {
             let count: KeyCount = self.read_msg()?;
@@ -59,7 +59,7 @@ impl Keyboard {
     }
 
     pub fn print_mapping(&self) -> Result<()> {
-        self.write_msg(Message::command(COMMAND::READ_ALL))?;
+        self.write_msg(Message::command(OpCode::KeymapDataRead))?;
         let mut normal: [u8; 256] = [0; 256];
         let mut left: [u8; 256] = [0; 256];
         let mut right: [u8; 256] = [0; 256];
@@ -87,21 +87,33 @@ impl Keyboard {
         Ok(())
     }
 
+    pub fn calib(&self) -> Result<()> {
+        self.write_msg(Message::command(OpCode::CalibInit))?;
+        Ok(())
+    }
+    
+    pub fn calib_press(&self) -> Result<()> {
+        self.write_msg(Message::command(OpCode::CalibPressed))?;
+        let msg: Message = self.read_msg()?;
+        println!("{}", msg);
+        Ok(())
+    }
+
     pub fn keylock(&self) -> Result<()> {
-        self.write_msg(Message::command(COMMAND::KEYLOCK))?;
+        self.write_msg(Message::command(OpCode::KeyLock))?;
         Ok(())
     }
     pub fn keyunlock(&self) -> Result<()> {
         let mut data = [0; 61];
         data[0] = 1;
-        self.write_msg(Message::command_with_data(COMMAND::KEYLOCK, data))?;
+        self.write_msg(Message::command_with_data(OpCode::KeyLock, data))?;
         Ok(())
     }
 
     pub fn write_mapping(&self) -> Result<()> {
         // you have to write the complete mapping every time, or you will get a nearly broken
         // keyboard
-        self.write_msg(Message::command(COMMAND::WRITE_ALL))?;
+        self.write_msg(Message::command(OpCode::KeymapDataStart))?;
         let mut data = [0; 61];
         data[0] = 1; // layer normal
         data[1] = 30; // key caps
@@ -109,10 +121,10 @@ impl Keyboard {
         data[3] = 0x01;
         data[4] = 15; // code backspace
         println!("{:?}", data);
-        self.write_msg(Message::command_with_data(COMMAND::KEY_DATA, data))?;
+        self.write_msg(Message::command_with_data(OpCode::KeymapData, data))?;
         self.write_msg(Message::command_with_data(
-            COMMAND::DATA_END,
-            [COMMAND::DATA_END as u8; 61],
+            OpCode::KeymapDataEnd,
+            [OpCode::KeymapDataEnd as u8; 61],
         ))?;
         Ok(())
     }
@@ -159,13 +171,13 @@ pub struct Message {
 }
 
 impl Message {
-    pub fn command(cmd: consts::COMMAND) -> Self {
+    pub fn command(cmd: consts::OpCode) -> Self {
         Self {
             command: cmd as u16,
             ..Message::default()
         }
     }
-    pub fn command_with_data(cmd: consts::COMMAND, data: [u8; 61]) -> Self {
+    pub fn command_with_data(cmd: consts::OpCode, data: [u8; 61]) -> Self {
         Self {
             command: cmd as u16,
             data,

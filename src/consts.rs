@@ -3,23 +3,18 @@ pub const PRODUCT_ID: u16 = 0x512a;
 pub const INTERFACE_ID: i32 = 1;
 
 #[repr(u16)]
-#[allow(non_camel_case_types)]
-pub enum COMMAND {
-    READ_SERIAL = 0x10,
-    CALIB = 0xda,
-    INITIAL_CALIB = 0xdb,
-    PRESS_CALIB = 0xdd,
-    KEYLOCK = 0xd9,
-    PRESS_CALIB_DONE = 0xde,
-    XXX_DATA = 0xe0,
-    READ_XXX = 0xe2,
-    READ_COUNTER = 0xe3,
-    XXX_END = 0xe6,
-    KEY_DATA = 0xf0,
-    WRITE_ALL = 0xf1,
-    READ_ALL = 0xf2,
-    DATA_END = 0xf6,
-    VERSION = 0xf9,
+pub enum OpCode {
+    VersionRead = 0xf9,
+    CounterRead = 0xe3,
+    KeyLock = 0xd9,
+
+    KeymapDataRead = 0xf2,
+    KeymapDataStart = 0xf1,
+    KeymapData = 0xf0,
+    KeymapDataEnd = 0xf6,
+
+    CalibInit = 0xdb,
+    CalibPressed = 0xdd,
 }
 
 pub const HWCODE: [&str; 256] = [
