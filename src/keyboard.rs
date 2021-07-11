@@ -35,9 +35,12 @@ impl Keyboard {
     pub fn print_version(&self) -> Result<()> {
         self.write_msg(Message::command(COMMAND::VERSION))?;
         let msg: Version = self.read_msg()?;
-        println!("{}", String::from_utf8_lossy(&msg.version)
-            .trim_end_matches('\u{0}')
-            .to_string());
+        println!(
+            "{}",
+            String::from_utf8_lossy(&msg.version)
+                .trim_end_matches('\u{0}')
+                .to_string()
+        );
         Ok(())
     }
 
@@ -49,19 +52,7 @@ impl Keyboard {
             if count.flag != 0 {
                 break;
             }
-            counter.append(
-                &mut count
-                    .data
-                    .chunks_exact(4)
-                    .into_iter()
-                    .map(|x| {
-                        let mut y = [0; 4];
-                        y.copy_from_slice(x);
-                        y
-                    })
-                    .map(|x| u32::from_le_bytes(x))
-                    .collect::<Vec<u32>>(),
-            );
+            counter.append(&mut count.data.to_vec());
         }
         println!("{:?}", counter);
         Ok(())
@@ -84,7 +75,7 @@ impl Keyboard {
                 _ => (),
             }
         }
-        for i in 1..66 as usize {
+        for i in 1..67 as usize {
             println!(
                 "key {}: normal {} left {} right {}",
                 i,
@@ -95,6 +86,25 @@ impl Keyboard {
         }
         Ok(())
     }
+
+    pub fn write_mapping(&self) -> Result<()> {
+        // you have to write the complete mapping every time, or you will get a nearly broken
+        // keyboard
+        self.write_msg(Message::command(COMMAND::WRITE_ALL))?;
+        let mut data = [0; 61];
+        data[0] = 1; // layer normal
+        data[1] = 30; // key caps
+        data[2] = 0x00;
+        data[3] = 0x01;
+        data[4] = 15; // code backspace
+        println!("{:?}", data);
+        self.write_msg(Message::command_with_data(COMMAND::KEY_DATA, data))?;
+        self.write_msg(Message::command_with_data(
+            COMMAND::DATA_END,
+            [COMMAND::DATA_END as u8; 61],
+        ))?;
+        Ok(())
+    }
 }
 
 #[derive(PackedStruct, Debug)]
@@ -103,7 +113,9 @@ pub struct KeyCount {
     flag: u8,
     fixed: u8,
     size: u8,
-    data: [u8; 61],
+    #[packed_field(endian = "lsb")]
+    data: [u32; 15],
+    padding: u8,
 }
 
 #[derive(PackedStruct, Debug)]
@@ -139,6 +151,13 @@ impl Message {
     pub fn command(cmd: consts::COMMAND) -> Self {
         Self {
             command: cmd as u16,
+            ..Message::default()
+        }
+    }
+    pub fn command_with_data(cmd: consts::COMMAND, data: [u8; 61]) -> Self {
+        Self {
+            command: cmd as u16,
+            data,
             ..Message::default()
         }
     }
