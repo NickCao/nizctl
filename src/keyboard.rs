@@ -33,7 +33,7 @@ impl Keyboard {
     }
 
     pub fn print_version(&self) -> Result<()> {
-        self.write_msg(Message::command(OpCode::VersionRead))?;
+        self.write_msg(Request::new(OpCode::VersionRead))?;
         let msg: Version = self.read_msg()?;
         println!(
             "{}",
@@ -45,30 +45,30 @@ impl Keyboard {
     }
 
     pub fn print_counter(&self) -> Result<()> {
-        self.write_msg(Message::command(OpCode::CounterRead))?;
+        self.write_msg(Request::new(OpCode::CounterRead))?;
         let mut counter: Vec<u32> = vec![];
         loop {
-            let count: KeyCount = self.read_msg()?;
-            if count.flag != 0 {
+            let count: KeyCounter = self.read_msg()?;
+            if count._id != 0 {
                 break;
             }
-            counter.append(&mut count.data.to_vec());
+            counter.append(&mut count.count.to_vec());
         }
         println!("{:?}", counter);
         Ok(())
     }
 
     pub fn print_mapping(&self) -> Result<()> {
-        self.write_msg(Message::command(OpCode::KeymapDataRead))?;
+        self.write_msg(Request::new(OpCode::KeymapDataRead))?;
         let mut normal: [u8; 256] = [0; 256];
         let mut left: [u8; 256] = [0; 256];
         let mut right: [u8; 256] = [0; 256];
         loop {
-            let mapping: KeyMapping = self.read_msg()?;
-            if mapping.flag != 0 {
+            let mapping: KeymapResponse = self.read_msg()?;
+            if mapping._id != 0 {
                 break;
             }
-            match mapping.level {
+            match mapping.layer {
                 1 => normal[mapping.key as usize] = mapping.keycode,
                 2 => left[mapping.key as usize] = mapping.keycode,
                 3 => right[mapping.key as usize] = mapping.keycode,
@@ -79,50 +79,45 @@ impl Keyboard {
             println!(
                 "key {}: normal {} left {} right {}",
                 i,
-                consts::HWCODE[normal[i] as usize],
-                consts::HWCODE[left[i] as usize],
-                consts::HWCODE[right[i] as usize]
+                consts::KEY_CODE_NAME[normal[i] as usize],
+                consts::KEY_CODE_NAME[left[i] as usize],
+                consts::KEY_CODE_NAME[right[i] as usize]
             );
         }
         Ok(())
     }
 
     pub fn calib(&self) -> Result<()> {
-        self.write_msg(Message::command(OpCode::CalibInit))?;
+        self.write_msg(Request::new(OpCode::CalibInit))?;
         Ok(())
     }
-    
+
     pub fn calib_press(&self) -> Result<()> {
-        self.write_msg(Message::command(OpCode::CalibPressed))?;
-        let msg: Message = self.read_msg()?;
-        println!("{}", msg);
+        self.write_msg(Request::new(OpCode::CalibPressed))?;
+        let _msg: Request = self.read_msg()?;
         Ok(())
     }
 
     pub fn keylock(&self) -> Result<()> {
-        self.write_msg(Message::command(OpCode::KeyLock))?;
+        self.write_msg(Request::new(OpCode::KeyLock))?;
         Ok(())
     }
     pub fn keyunlock(&self) -> Result<()> {
         let mut data = [0; 61];
         data[0] = 1;
-        self.write_msg(Message::command_with_data(OpCode::KeyLock, data))?;
+        self.write_msg(Request::new_with_data(OpCode::KeyLock, data))?;
         Ok(())
     }
 
     pub fn write_mapping(&self) -> Result<()> {
         // you have to write the complete mapping every time, or you will get a nearly broken
         // keyboard
-        self.write_msg(Message::command(OpCode::KeymapDataStart))?;
-        let mut data = [0; 61];
-        data[0] = 1; // layer normal
-        data[1] = 30; // key caps
-        data[2] = 0x00;
-        data[3] = 0x01;
-        data[4] = 15; // code backspace
-        println!("{:?}", data);
-        self.write_msg(Message::command_with_data(OpCode::KeymapData, data))?;
-        self.write_msg(Message::command_with_data(
+        self.write_msg(Request::new(OpCode::KeymapDataStart))?;
+        self.write_msg(Request::new_with_data(
+            OpCode::KeymapData,
+            KeymapData::new(1, 30, 15).pack()?,
+        ))?;
+        self.write_msg(Request::new_with_data(
             OpCode::KeymapDataEnd,
             [OpCode::KeymapDataEnd as u8; 61],
         ))?;
@@ -130,68 +125,79 @@ impl Keyboard {
     }
 }
 
-#[derive(PackedStruct, Debug)]
+#[derive(PackedStruct)]
 #[packed_struct(endian = "msb")]
-pub struct KeyCount {
-    flag: u8,
-    fixed: u8,
-    size: u8,
-    #[packed_field(endian = "lsb")]
-    data: [u32; 15],
-    padding: u8,
+pub struct Request {
+    _id: u8,
+    op: u16,
+    data: [u8; 61],
 }
 
-#[derive(PackedStruct, Debug)]
-#[packed_struct(endian = "msb")]
-pub struct KeyMapping {
-    flag: u8,
-    command: u8,
-    level: u8,
-    key: u8,
-    zero: u8,
-    mapped: u8,
-    keycode: u8,
-    padding: [u8; 57],
+impl Request {
+    pub fn new(op: consts::OpCode) -> Self {
+        Self::new_with_data(op, [0; 61])
+    }
+    pub fn new_with_data(op: consts::OpCode, data: [u8; 61]) -> Self {
+        Self {
+            _id: 0,
+            op: op as u16,
+            data,
+        }
+    }
 }
 
 #[derive(PackedStruct)]
 #[packed_struct(endian = "msb")]
 pub struct Version {
-    report: u8,
-    command: u8,
+    _id: u8,
+    _type: u8,
     version: [u8; 62],
 }
 
 #[derive(PackedStruct)]
 #[packed_struct(endian = "msb")]
-pub struct Message {
-    report: u8,
-    command: u16,
-    data: [u8; 61],
+pub struct KeyCounter {
+    _id: u8,
+    _type: u8,
+    size: u8,
+    #[packed_field(endian = "lsb")]
+    count: [u32; 15],
+    _padding: u8,
 }
 
-impl Message {
-    pub fn command(cmd: consts::OpCode) -> Self {
-        Self {
-            command: cmd as u16,
-            ..Message::default()
-        }
-    }
-    pub fn command_with_data(cmd: consts::OpCode, data: [u8; 61]) -> Self {
-        Self {
-            command: cmd as u16,
-            data,
-            ..Message::default()
-        }
-    }
+#[derive(PackedStruct)]
+#[packed_struct(endian = "msb")]
+pub struct KeymapResponse {
+    _id: u8,
+    _type: u8,
+    layer: u8,
+    key: u8,
+    _zero: u8,
+    active: u8,
+    keycode: u8,
+    _padding: [u8; 57],
 }
 
-impl Default for Message {
-    fn default() -> Self {
+#[derive(PackedStruct)]
+#[packed_struct(endian = "msb")]
+pub struct KeymapData {
+    layer: u8,
+    key: u8,
+    _zero: u8,
+    active: u8,
+    keycode: u8,
+    _padding: [u8; 56],
+}
+
+impl KeymapData {
+    pub fn new(layer: u8, key: u8, keycode: u8) -> Self {
         Self {
-            report: 0,
-            command: 0,
-            data: [0; 61],
+            layer,
+            key,
+            _zero: 0,
+            active: if keycode == 0 { 0 } else { 1 },
+            keycode,
+            _padding: [0; 56],
         }
     }
 }

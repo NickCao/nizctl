@@ -17,7 +17,7 @@ pub enum OpCode {
     CalibPressed = 0xdd,
 }
 
-pub const HWCODE: [&str; 256] = [
+pub const KEY_CODE_NAME: [&str; 256] = [
     "unmapped",
     "ESC",
     "F1",
