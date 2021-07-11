@@ -87,6 +87,17 @@ impl Keyboard {
         Ok(())
     }
 
+    pub fn keylock(&self) -> Result<()> {
+        self.write_msg(Message::command(COMMAND::KEYLOCK))?;
+        Ok(())
+    }
+    pub fn keyunlock(&self) -> Result<()> {
+        let mut data = [0; 61];
+        data[0] = 1;
+        self.write_msg(Message::command_with_data(COMMAND::KEYLOCK, data))?;
+        Ok(())
+    }
+
     pub fn write_mapping(&self) -> Result<()> {
         // you have to write the complete mapping every time, or you will get a nearly broken
         // keyboard
