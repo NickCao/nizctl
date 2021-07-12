@@ -19,7 +19,7 @@ pub enum OpCode {
 
 pub const KEY_CODE_NAME: [&str; 256] = [
     "KC_NO",
-    "KC_ESCAPE",
+    "KC_ESC",
     "KC_F1",
     "KC_F2",
     "KC_F3",
@@ -32,7 +32,7 @@ pub const KEY_CODE_NAME: [&str; 256] = [
     "KC_F10",
     "KC_F11",
     "KC_F12",
-    "KC_GRAVE",
+    "KC_GRV",
     "KC_1",
     "KC_2",
     "KC_3",
@@ -43,9 +43,9 @@ pub const KEY_CODE_NAME: [&str; 256] = [
     "KC_8",
     "KC_9",
     "KC_0",
-    "KC_MINUS",
-    "KC_EQUAL",
-    "KC_BSPACE",
+    "KC_MINS",
+    "KC_EQL",
+    "KC_BSPC",
     "KC_TAB",
     "KC_Q",
     "KC_W",
@@ -57,10 +57,10 @@ pub const KEY_CODE_NAME: [&str; 256] = [
     "KC_I",
     "KC_O",
     "KC_P",
-    "KC_LBRACKET",
-    "KC_RBRACKET",
-    "KC_BSLASH",
-    "KC_CAPSLOCK",
+    "KC_LBRC",
+    "KC_RBRC",
+    "KC_BSLS",
+    "KC_CAPS",
     "KC_A",
     "KC_S",
     "KC_D",
@@ -70,10 +70,10 @@ pub const KEY_CODE_NAME: [&str; 256] = [
     "KC_J",
     "KC_K",
     "KC_L",
-    "KC_SCOLON",
-    "KC_QUOTE",
-    "KC_ENTER",
-    "KC_LSHIFT",
+    "KC_SCLN",
+    "KC_QUOT",
+    "KC_ENT",
+    "KC_LSFT",
     "KC_Z",
     "KC_X",
     "KC_C",
@@ -81,34 +81,34 @@ pub const KEY_CODE_NAME: [&str; 256] = [
     "KC_B",
     "KC_N",
     "KC_M",
-    "KC_COMMA",
+    "KC_COMM",
     "KC_DOT",
-    "KC_SLASH",
+    "KC_SLSH",
     "KC_RSHIFT",
-    "KC_LCTRL",
+    "KC_LCTL",
     "KC_LGUI",
     "KC_LALT",
-    "KC_SPACE",
+    "KC_SPC",
     "KC_RALT",
     "KC_RGUI",
     "KC_APPLICATION",
-    "KC_RCTRL",
+    "KC_RCTL",
     "KC_SYSTEM_WAKE",
     "KC_SYSTEM_SLEEP",
     "KC_SYSTEM_POWER",
-    "KC_PSCREEN",
-    "KC_SCROLLLOCK",
-    "KC_PAUSE",
-    "KC_INSERT",
+    "KC_PSCR",
+    "KC_SLCK",
+    "KC_PAUS",
+    "KC_INS",
     "KC_HOME",
     "KC_PGUP",
-    "KC_DELETE",
+    "KC_DEL",
     "KC_END",
-    "KC_PGDOWN",
+    "KC_PGDN",
     "KC_UP",
     "KC_LEFT",
     "KC_DOWN",
-    "KC_RIGHT",
+    "KC_RGHT",
     "KC_NUMLOCK",
     "KC_KP_SLASH",
     "KC_KP_ASTERISK",
@@ -144,13 +144,13 @@ pub const KEY_CODE_NAME: [&str; 256] = [
     "KC_WWW_STOP",
     "KC_WWW_REFRESH",
     "KC_WWW_FAVORITES",
-    "KC_MS_LEFT",
-    "KC_MS_RIGHT",
-    "KC_MS_UP",
-    "KC_MS_DOWN",
-    "KC_MS_BTN1",
-    "KC_MS_BTN3",
-    "KC_MS_BTN2",
+    "KC_MS_L",
+    "KC_MS_R",
+    "KC_MS_U",
+    "KC_MS_D",
+    "KC_BTN1",
+    "KC_BTN3",
+    "KC_BTN2",
     "KC_MS_WH_UP",
     "KC_MS_WH_DOWN",
     "BL_TOGG",
@@ -164,38 +164,38 @@ pub const KEY_CODE_NAME: [&str; 256] = [
     "KC_NO", // breathe sequence +
     "BL_DEC",
     "BL_INC",
-    "KC_NO",    // sunset or relax/aurora
-    "KC_NO",    // color breathe
-    "KC_NO",    // back color exchange
-    "MI_TRNSU", // adjust trigger point
-    "MI_TOG",   // keyboard lock
+    "KC_NO",         // sunset or relax/aurora
+    "KC_NO",         // color breathe
+    "KC_NO",         // back color exchange
+    "ANY(MI_TRNSU)", // adjust trigger point
+    "ANY(MI_TOG)",   // keyboard lock
     "RSFT_T(KC_UP)",
-    "MAGIC_SWAP_CONTROL_CAPSLOCK",
-    "MAGIC_NO_GUI",
-    "KC_NO",                // mouse lock
-    "UNICODE_MODE_FORWARD", // exchange win and mac
+    "CL_SWAP",
+    "GUI_OFF",
+    "KC_NO",       // mouse lock
+    "ANY(UC_MOD)", // exchange win and mac
     "MO(1)",
-    "MI_VELD", // mouse unit pixel
-    "MI_VELU", // mouse unit time
-    "MI_MOD",  // toggle programmable
-    "KC_NO",   // backlight record 1
-    "KC_NO",   // backlight record 2
-    "KC_NO",   // backlight record 3
-    "KC_NO",   // backlight record 4
-    "KC_NO",   // backlight record 5
-    "KC_NO",   // backlight record 6
+    "ANY(MI_VELD)", // mouse unit pixel
+    "ANY(MI_VELU)", // mouse unit time
+    "ANY(MI_MOD)",  // toggle programmable
+    "KC_NO",        // backlight record 1
+    "KC_NO",        // backlight record 2
+    "KC_NO",        // backlight record 3
+    "KC_NO",        // backlight record 4
+    "KC_NO",        // backlight record 5
+    "KC_NO",        // backlight record 6
     "MO(2)",
-    "MI_CHU",   // wired/wireless
-    "MI_CH1",   // bluetooth device 1
-    "MI_CH2",   // bluetooth device 2
-    "MI_CH3",   // bluetooth device 3
-    "MI_MODSD", // eco mode
-    "MI_MODSU", // game mode
-    "KC_NO",    // mouse first delay
-    "MI_BENDD", // key repeat rate
-    "MI_BENDU", // key response delay
-    "KC_NO",    // usb report rate
-    "KC_NO",    // key scan period
+    "ANY(MI_CHU)",   // wired/wireless
+    "ANY(MI_CH1)",   // bluetooth device 1
+    "ANY(MI_CH2)",   // bluetooth device 2
+    "ANY(MI_CH3)",   // bluetooth device 3
+    "ANY(MI_MODSD)", // eco mode
+    "ANY(MI_MODSU)", // game mode
+    "KC_NO",         // mouse first delay
+    "ANY(MI_BENDD)", // key repeat rate
+    "ANY(MI_BENDU)", // key response delay
+    "KC_NO",         // usb report rate
+    "KC_NO",         // key scan period
     "KC_NO",
     "KC_NO",
     "KC_NO",
