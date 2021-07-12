@@ -2,6 +2,7 @@ use crate::consts::{self, OpCode};
 use anyhow::Result;
 use hidapi::{HidApi, HidDevice};
 use packed_struct::prelude::*;
+use std::convert::TryInto;
 
 pub struct Keyboard {
     device: HidDevice,
@@ -32,59 +33,45 @@ impl Keyboard {
         Ok(T::unpack(&buf)?)
     }
 
-    pub fn print_version(&self) -> Result<()> {
+    pub fn read_version(&self) -> Result<String> {
         self.write_msg(Request::new(OpCode::VersionRead))?;
-        let msg: Version = self.read_msg()?;
-        println!(
-            "{}",
-            String::from_utf8_lossy(&msg.version)
-                .trim_end_matches('\u{0}')
-                .to_string()
-        );
-        Ok(())
+        let record: Version = self.read_msg()?;
+        Ok(String::from_utf8_lossy(&record.version)
+            .trim_end_matches('\u{0}')
+            .to_string())
     }
 
-    pub fn print_counter(&self) -> Result<()> {
+    pub fn read_counter(&self) -> Result<Vec<u32>> {
         self.write_msg(Request::new(OpCode::CounterRead))?;
         let mut counter: Vec<u32> = vec![];
         loop {
-            let count: KeyCounter = self.read_msg()?;
-            if count._id != 0 {
+            let record: KeyCounter = self.read_msg()?;
+            if record._id != 0 {
                 break;
             }
-            counter.append(&mut count.count.to_vec());
+            counter.append(&mut record.count[..((record.size / 4) as usize)].to_vec());
         }
-        println!("{:?}", counter);
-        Ok(())
+        Ok(counter)
     }
 
-    pub fn print_mapping(&self) -> Result<()> {
+    pub fn read_keymap(&self) -> Result<Vec<Vec<u8>>> {
         self.write_msg(Request::new(OpCode::KeymapDataRead))?;
-        let mut normal: [u8; 256] = [0; 256];
-        let mut left: [u8; 256] = [0; 256];
-        let mut right: [u8; 256] = [0; 256];
+        let mut keymap: Vec<Vec<u8>> = vec![];
         loop {
-            let mapping: KeymapResponse = self.read_msg()?;
-            if mapping._id != 0 {
+            let record: KeymapResponse = self.read_msg()?;
+            if record._id != 0 {
                 break;
             }
-            match mapping.layer {
-                1 => normal[mapping.key as usize] = mapping.keycode,
-                2 => left[mapping.key as usize] = mapping.keycode,
-                3 => right[mapping.key as usize] = mapping.keycode,
-                _ => (),
+            if record.layer as usize > keymap.len() {
+                keymap.resize(record.layer as usize, vec![]);
             }
+            let layer = &mut keymap[(record.layer - 1) as usize];
+            if record.key as usize > layer.len() {
+                layer.resize(record.key as usize, 0);
+            }
+            layer[(record.key - 1) as usize] = record.keycode;
         }
-        for i in 1..67 as usize {
-            println!(
-                "key {}: 0: {} 1: {} 2: {}",
-                i,
-                consts::KEY_CODE_NAME[normal[i] as usize],
-                consts::KEY_CODE_NAME[left[i] as usize],
-                consts::KEY_CODE_NAME[right[i] as usize]
-            );
-        }
-        Ok(())
+        Ok(keymap)
     }
 
     pub fn calib(&self) -> Result<()> {
@@ -109,14 +96,16 @@ impl Keyboard {
         Ok(())
     }
 
-    pub fn write_mapping(&self) -> Result<()> {
-        // you have to write the complete mapping every time, or you will get a nearly broken
-        // keyboard
+    pub fn write_keymap(&self, keymap: Vec<Vec<u8>>) -> Result<()> {
         self.write_msg(Request::new(OpCode::KeymapDataStart))?;
-        self.write_msg(Request::new_with_data(
-            OpCode::KeymapData,
-            KeymapData::new(1, 30, 15).pack()?,
-        ))?;
+        for (i, layer) in keymap.iter().enumerate() {
+            for (key, &keycode) in layer.iter().enumerate() {
+                self.write_msg(Request::new_with_data(
+                    OpCode::KeymapData,
+                    KeymapData::new((i + 1).try_into()?, (key + 1).try_into()?, keycode).pack()?,
+                ))?;
+            }
+        }
         self.write_msg(Request::new_with_data(
             OpCode::KeymapDataEnd,
             [OpCode::KeymapDataEnd as u8; 61],

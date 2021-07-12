@@ -3,7 +3,7 @@ use nizctl::keyboard;
 
 fn main() {
     let kbd = keyboard::Keyboard::open().unwrap();
-    kbd.print_version().unwrap();
-    kbd.print_mapping().unwrap();
-    kbd.print_counter().unwrap();
+    println!("{}", kbd.read_version().unwrap());
+    println!("{:?}", kbd.read_keymap().unwrap());
+    println!("{:?}", kbd.read_counter().unwrap());
 }
