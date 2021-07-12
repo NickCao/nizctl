@@ -77,7 +77,7 @@ impl Keyboard {
         }
         for i in 1..67 as usize {
             println!(
-                "key {}: normal {} left {} right {}",
+                "key {}: 0: {} 1: {} 2: {}",
                 i,
                 consts::KEY_CODE_NAME[normal[i] as usize],
                 consts::KEY_CODE_NAME[left[i] as usize],
