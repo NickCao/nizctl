@@ -20,7 +20,9 @@
     {
       overlay = final: prev:
         let
-          toolchain = final.rust-bin.nightly.latest.default;
+          toolchain = final.rust-bin.selectLatestNightlyWith (toolchain: toolchain.default.override {
+            extensions = [ "rust-analyzer-preview" "rust-src" ];
+          });
           platform = final.makeRustPlatform { cargo = toolchain; rustc = toolchain; };
         in
         {
