@@ -21,10 +21,7 @@ enum SubCommand {
 }
 
 #[derive(Clap, Debug)]
-struct Pull {
-    #[clap(short, long, default_value = "niz/atom66")]
-    name: String,
-}
+struct Pull {}
 
 #[derive(Clap, Debug)]
 struct Push {}
@@ -41,15 +38,15 @@ struct Calib {}
 fn main() {
     let opts: Nizctl = Nizctl::parse();
     match opts.sub {
-        SubCommand::Pull(p) => println!(
-            "{}",
-            config::Keymap::new(
-                p.name,
-                keyboard::Keyboard::open().unwrap().read_keymap().unwrap(),
-            )
-            .encode()
-            .unwrap()
-        ),
+        SubCommand::Pull(_) => {
+            let kbd = keyboard::Keyboard::open().unwrap();
+            println!(
+                "{}",
+                config::Keymap::new(format!("niz/{}", kbd.name), kbd.read_keymap().unwrap())
+                    .encode()
+                    .unwrap()
+            );
+        }
         SubCommand::Push(_) => {
             let mut buffer = String::new();
             std::io::stdin().read_to_string(&mut buffer).unwrap();

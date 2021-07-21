@@ -5,7 +5,7 @@ use packed_struct::prelude::*;
 use std::convert::TryInto;
 
 pub struct Keyboard {
-    name: &'static str,
+    pub name: &'static str,
     device: HidDevice,
 }
 
