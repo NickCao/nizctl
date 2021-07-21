@@ -1,6 +1,6 @@
 #![feature(duration_constants)]
 use clap::Clap;
-use dialoguer::Confirm;
+use dialog::DialogBox;
 use nizctl::{config, keyboard};
 use std::io::Read;
 
@@ -61,9 +61,7 @@ fn main() {
                 .unwrap()
         }
         SubCommand::Lock(_) => {
-            if Confirm::new()
-                .with_prompt("do you really want to lock your keyboard, you will need another keyboard to unlock")
-                .interact().unwrap()
+            if dialog::Question::new("do you really want to lock your keyboard, you will need another keyboard to unlock").title("Warning").show().unwrap() == dialog::Choice::Yes
             {
                 keyboard::Keyboard::open().unwrap().keylock().unwrap();
             }
@@ -72,16 +70,14 @@ fn main() {
             keyboard::Keyboard::open().unwrap().keyunlock().unwrap();
         }
         SubCommand::Calib(_) => {
-            if !Confirm::new()
-                .with_prompt("you will need another keyboard to continue with the calibration process, as you keyboard will be locked, before continuing, make sure that all the keys are released")
-               .interact().unwrap()
-            {
+            let ans = dialog::Question::new("Before starting the calibration process, make sure that all the keys are released, if you are seeing this message in your terminal, either install zenity or kdialog, or use another keyboard during the process.").title("Reminder").show().unwrap();
+            if ans != dialog::Choice::Yes {
                 return;
             }
             let kbd = keyboard::Keyboard::open().unwrap();
             kbd.keylock().unwrap();
             kbd.calib().unwrap();
-            while Confirm::new().with_prompt("hold the key you want to calibrate firmly, then press y from another keyboard, press n when you are done").interact().unwrap() {
+            while dialog::Question::new("hold the key you want to calibrate firmly, then press Yes, when you are done, press No").title("Calib").show().unwrap() == dialog::Choice::Yes {
                 kbd.calib_press().unwrap();
             }
             kbd.keyunlock().unwrap();
