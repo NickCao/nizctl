@@ -13,10 +13,11 @@ write new keymap from stdin
 
 ## supported models
 - Atom66
+- Atom68
 - (should work on other models with minor modification)
 
 ## TODO
-- [ ] calibration
+- [x] calibration
 - [ ] macro
 
 ## credits

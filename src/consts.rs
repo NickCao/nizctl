@@ -1,6 +1,15 @@
+use std::collections::HashMap;
+
 pub const VENDOR_ID: u16 = 0x0483;
-pub const PRODUCT_ID: u16 = 0x512a;
 pub const INTERFACE_ID: i32 = 1;
+lazy_static::lazy_static! {
+    pub static ref PRODUCT_ID: HashMap<u16, &'static str> = {
+        let mut map = HashMap::new();
+        map.insert(0x512a, "atom66");
+        map.insert(0x5129, "atom68");
+        map
+    };
+}
 
 #[repr(u16)]
 pub enum OpCode {

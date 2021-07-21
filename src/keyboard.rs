@@ -5,6 +5,7 @@ use packed_struct::prelude::*;
 use std::convert::TryInto;
 
 pub struct Keyboard {
+    name: &'static str,
     device: HidDevice,
 }
 
@@ -13,11 +14,12 @@ impl Keyboard {
         let hidapi = HidApi::new()?;
         for device in hidapi.device_list() {
             if device.vendor_id() == consts::VENDOR_ID
-                && device.product_id() == consts::PRODUCT_ID
                 && device.interface_number() == consts::INTERFACE_ID
             {
-                let device = device.open_device(&hidapi)?;
-                return Ok(Keyboard { device });
+                if let Some(name) = consts::PRODUCT_ID.get(&device.product_id()) {
+                    let device = device.open_device(&hidapi)?;
+                    return Ok(Keyboard { name, device });
+                }
             }
         }
         Err(anyhow::anyhow!("no mactching device found"))

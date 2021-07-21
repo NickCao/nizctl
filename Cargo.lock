@@ -190,6 +190,7 @@ dependencies = [
  "clap",
  "dialoguer",
  "hidapi",
+ "lazy_static",
  "packed_struct",
  "serde",
  "serde_json",
