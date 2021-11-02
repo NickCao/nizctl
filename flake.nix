@@ -15,6 +15,7 @@
         rec {
           packages = { inherit (pkgs) nizctl niz-qmk-configurator; };
           devShell = pkgs.mkShell { inputsFrom = [ pkgs.nizctl ]; };
+          defaultPackage = pkgs.nizctl;
         }
       ) //
     {
