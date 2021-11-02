@@ -13,7 +13,7 @@
       (system:
         let pkgs = import nixpkgs { inherit system; overlays = [ self.overlay rust-overlay.overlay ]; }; in
         rec {
-          packages = { inherit (pkgs) nizctl; };
+          packages = { inherit (pkgs) nizctl niz-qmk-configurator; };
           devShell = pkgs.mkShell { inputsFrom = [ pkgs.nizctl ]; };
         }
       ) //
@@ -35,6 +35,9 @@
               lockFile = ./Cargo.lock;
             };
           };
+
+          niz-qmk-configurator =
+            final.callPackage ./niz-qmk-configurator.nix {};
         };
     };
 }
