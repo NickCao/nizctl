@@ -93,7 +93,7 @@ pub const KEY_CODE_NAME: [&str; 256] = [
     "KC_COMM",
     "KC_DOT",
     "KC_SLSH",
-    "KC_RSHIFT",
+    "KC_RSFT",
     "KC_LCTL",
     "KC_LGUI",
     "KC_LALT",
