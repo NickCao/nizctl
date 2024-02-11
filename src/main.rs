@@ -1,4 +1,3 @@
-#![feature(duration_constants)]
 use clap::Clap;
 use dialog::DialogBox;
 use nizctl::{config, keyboard};
